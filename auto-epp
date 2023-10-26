@@ -1,0 +1,135 @@
+import os
+import time
+import subprocess
+
+USER = os.getlogin()
+UID = os.getuid()
+
+PATH_INSTALL = f'/home/{USER}/.local/bin'
+
+PATH_SCALING_GOV = '/sys/devices/system/cpu/cpu0/cpufreq/scaling_governor'
+PATH_AMD_PSTATE_STATUS = '/sys/devices/system/cpu/amd_pstate/status'
+PATH_EPP = '/sys/devices/system/cpu/cpu0/cpufreq/energy_performance_preference'
+PATH_BATTERY = '/sys/class/power_supply/BAT0/status'
+
+POWER_PLATFORM_PROFILES = ['power-saver', 'balanced', 'performance']
+EPP_PROFILES = ['performance', 'balance_performance', 'balance_power', 'power']
+GOV_PROFILES = ['powersave', 'performance']
+
+def get_battery_status():
+    try:
+        with open(PATH_BATTERY, 'r') as battery:
+            status = battery.read().strip()
+            return status
+    except(FileNotFoundError):
+        print('Cannot find battery')
+
+def get_current_power_profile():
+    try:
+        current_power_profile = subprocess.getoutput('powerprofilesctl get')
+    except(FileNotFoundError):
+        print('Power Profiles Daemon not found in PATH')
+    return current_power_profile
+
+def get_current_gov_profile():
+    try:
+        with open(PATH_SCALING_GOV, 'r') as gov:
+            current_gov = gov.read().strip()
+            gov.close()
+    except(FileNotFoundError):
+        print(f'Scaling governon not available')
+    return current_gov
+        
+def get_current_epp_profile():
+    with open(PATH_EPP, 'r') as f:
+        current_epp_profile = f.read().strip()
+        f.close()
+    return current_epp_profile
+
+def set_pp(power_profile: str):
+    try:
+        if power_profile in POWER_PLATFORM_PROFILES:
+            subprocess.call(['powerprofilesctl', 'set', f'{power_profile}'])
+    except(FileNotFoundError):
+        print(f'Cannot set Power Profile to {power_profile}, powerprofilesctl not found')
+
+def set_gov_profile(gov_profile: str):
+    cpus = os.cpu_count()
+    if gov_profile in GOV_PROFILES: 
+        for cpu in range(cpus):
+            try:
+                with open(f'/sys/devices/system/cpu/cpu{cpu}/cpufreq/scaling_governor', 'w') as cpu_gov:
+                    cpu_gov.write(gov_profile)
+                    cpu_gov.close()     
+            except(OSError):
+                print('Cannot set governon profile')
+                exit(1)
+        print(f'Governon set to: {gov_profile}')
+
+def set_epp(epp_profile: str):
+    cpus = os.cpu_count()
+    if epp_profile in EPP_PROFILES:
+        for cpu in range(cpus):
+            try:
+                with open(f'/sys/devices/system/cpu/cpu{cpu}/cpufreq/energy_performance_preference', 'w') as cpu_epp:
+                    cpu_epp.write(epp_profile)
+                    cpu_epp.close()
+            except(OSError):
+                print('Cannot set EPP profile')
+                exit(1)
+        print(f'EPP set to: {epp_profile}')
+            
+def match_energy_performance_preference_with_pp():
+    current_pp = get_current_power_profile()
+    current_epp = get_current_epp_profile()
+    battery_status = get_battery_status()
+    desired_epp = ''
+    
+    if  current_pp == 'power-saver':
+        desired_epp = 'power'
+        if desired_epp != current_epp:
+            set_epp(desired_epp)
+    elif current_pp == "balanced":
+        if battery_status == 'Discharging':
+            desired_epp = 'balance_power'
+            if desired_epp != current_epp:
+                set_epp(desired_epp)
+        else:
+            desired_epp = 'balance_performance'
+            if desired_epp != current_epp:
+                set_epp(desired_epp)
+    elif current_pp == 'performance':
+        desired_epp = 'performance'
+        if desired_epp != current_epp:
+            set_epp(desired_epp)
+    else:
+        print("Something went wrong")
+        exit(1)
+
+def main():
+    desired_gov = 'powersave'
+    current_gov = get_current_gov_profile()
+    set_pp('performance')
+    if desired_gov != current_gov:
+        set_gov_profile(desired_gov)
+        
+    while True:
+        match_energy_performance_preference_with_pp()
+        time.sleep(2)
+        
+if __name__ == "__main__":
+    try:    
+        with open(PATH_AMD_PSTATE_STATUS, "r") as f:
+            status = f.read().strip()
+            f.close()
+            if status != "active":
+                print(f'AMD-PSTATE mode is unsupported: {status}')
+                exit(1)
+            print(f'AMD-PSTATE in {status} mode')
+    except(FileNotFoundError):
+        print("Path not found (is AMD-PSTATE enabled?)")
+
+    if UID != 0:
+        print("Program requires root privileges")
+        exit(1)
+    main()
