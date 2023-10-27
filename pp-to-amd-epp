@@ -97,15 +97,16 @@ def match_epp_with_pp():
     
     if  current_pp == 'power-saver':
         desired_epp = 'power'
-    elif current_pp == "balanced":
+
+    elif current_pp == 'performance':
+        desired_epp = 'performance'
+        
+    else:
         if battery_status == 'Discharging':
             desired_epp = 'balance_power'
         else:
             desired_epp = 'balance_performance'
-    elif current_pp == 'performance':
-        desired_epp = 'performance'
-    else:
-        log.warning('Power profile not supported')
+        
         
     if desired_epp != current_epp:
         set_epp(desired_epp)
