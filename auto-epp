@@ -1,6 +1,19 @@
+#!/bin/env python3
+
 import os
+import sys
 import time
+import logging
 import subprocess
+
+log = logging.getLogger()
+log.setLevel(logging.DEBUG)
+
+handler = logging.StreamHandler(sys.stdout)
+handler.setLevel(logging.DEBUG)
+formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
+handler.setFormatter(formatter)
+log.addHandler(handler)
 
 USER = os.getlogin()
 UID = os.getuid()
@@ -16,32 +29,32 @@ POWER_PLATFORM_PROFILES = ['power-saver', 'balanced', 'performance']
 EPP_PROFILES = ['performance', 'balance_performance', 'balance_power', 'power']
 GOV_PROFILES = ['powersave', 'performance']
 
-def get_battery_status():
+def get_battery_status() -> str:
     try:
         with open(PATH_BATTERY, 'r') as battery:
             status = battery.read().strip()
     except(FileNotFoundError):
-        print('Cannot find battery')
+        log.warning('Cannot find battery')
         return
     return status
 
-def get_current_power_profile():
+def get_current_power_profile() -> str:
     try:
         current_power_profile = subprocess.getoutput('powerprofilesctl get')
     except(FileNotFoundError):
-        print('Power Profiles Daemon not found in PATH')
+        log.error('Power Profiles Daemon not found in PATH')
     return current_power_profile
 
-def get_current_gov_profile():
+def get_current_gov_profile() -> str:
     try:
         with open(PATH_SCALING_GOV, 'r') as gov:
             current_gov = gov.read().strip()
             gov.close()
     except(FileNotFoundError):
-        print(f'Scaling governon not available')
+        log.warning(f'Scaling governon not available')
     return current_gov
-        
-def get_current_epp_profile():
+
+def get_current_epp_profile() -> str:
     with open(PATH_EPP, 'r') as f:
         current_epp_profile = f.read().strip()
         f.close()
@@ -52,7 +65,7 @@ def set_pp(power_profile: str):
         if power_profile in POWER_PLATFORM_PROFILES:
             subprocess.call(['powerprofilesctl', 'set', f'{power_profile}'])
     except(FileNotFoundError):
-        print(f'Cannot set Power Profile to {power_profile}, powerprofilesctl not found')
+        log.error(f'Cannot set Power Profile to {power_profile}, powerprofilesctl not found')
 
 def set_gov_profile(gov_profile: str):
     cpus = os.cpu_count()
@@ -63,9 +76,9 @@ def set_gov_profile(gov_profile: str):
                     cpu_gov.write(gov_profile)
                     cpu_gov.close()     
             except(OSError):
-                print('Cannot set governon profile')
+                log.error('Cannot set governon profile')
                 exit(1)
-        print(f'Governon set to: {gov_profile}')
+        log.info(f'Governon set to: {gov_profile}')
 
 def set_epp(epp_profile: str):
     cpus = os.cpu_count()
@@ -76,11 +89,11 @@ def set_epp(epp_profile: str):
                     cpu_epp.write(epp_profile)
                     cpu_epp.close()
             except(OSError):
-                print('Cannot set EPP profile')
+                log.error('Cannot set EPP profile')
                 exit(1)
-        print(f'EPP set to: {epp_profile}')
+        log.info(f'EPP set to: {epp_profile}')
             
-def match_energy_performance_preference_with_pp():
+def match_epp_with_pp():
     current_pp = get_current_power_profile()
     current_epp = get_current_epp_profile()
     battery_status = get_battery_status()
@@ -96,7 +109,8 @@ def match_energy_performance_preference_with_pp():
     elif current_pp == 'performance':
         desired_epp = 'performance'
     else:
-        print('Power profile not supported')
+        log.warning('Power profile not supported')
+        
     if desired_epp != current_epp:
         set_epp(desired_epp)
 
@@ -105,24 +119,27 @@ def main():
     current_gov = get_current_gov_profile()
     if desired_gov != current_gov:
         set_gov_profile(desired_gov)
+    else:
+        log.info(f'Governon alraedy in desired state: {desired_gov}')
         
     while True:
-        match_energy_performance_preference_with_pp()
+        match_epp_with_pp()
         time.sleep(2)
         
 if __name__ == "__main__":
-    try:    
+    try:
         with open(PATH_AMD_PSTATE_STATUS, "r") as f:
             status = f.read().strip()
             f.close()
             if status != "active":
-                print(f'AMD-PSTATE mode is unsupported: {status}')
+                log.error(f'AMD-PSTATE mode is unsupported: {status}')
                 exit(1)
-            print(f'AMD-PSTATE in {status} mode')
+            log.info(f'AMD-PSTATE in {status} mode')
     except(FileNotFoundError):
-        print("Path not found (is AMD-PSTATE enabled?)")
+        log.error("Path not found (is AMD-PSTATE enabled?)")
+        exit(1)
 
     if UID != 0:
-        print("Program requires root privileges")
+        log.error("Program requires root privileges")
         exit(1)
     main()
