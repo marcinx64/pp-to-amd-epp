@@ -38,7 +38,7 @@ def get_current_power_profile() -> str:
     try:
         current_power_profile = subprocess.getoutput('powerprofilesctl get')
     except(FileNotFoundError):
-        log.error('Power Profiles Daemon not found in PATH')
+        log.error('Power Profiles Daemon not found on system')
     return current_power_profile
 
 def get_current_gov_profile() -> str:
@@ -88,7 +88,7 @@ def set_epp(epp_profile: str):
                 log.error('Cannot set EPP profile')
                 exit(1)
         log.info(f'EPP set to: {epp_profile}')
-            
+
 def match_epp_with_pp():
     current_pp = get_current_power_profile()
     current_epp = get_current_epp_profile()
