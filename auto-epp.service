@@ -7,7 +7,7 @@ After=power-profiles-daemon.service
 Type=simple
 Restart=on-failure
 User=root
-ExecStart=/home/marcin/.local/bin/auto-epp
+ExecStart=/home/user/.local/bin/auto-epp
 
 [Install]
 WantedBy=multi-user.target
