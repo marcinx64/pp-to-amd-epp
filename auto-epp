@@ -10,7 +10,7 @@ log.setLevel(logging.DEBUG)
 
 handler = logging.StreamHandler(sys.stdout)
 handler.setLevel(logging.DEBUG)
-formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
+formatter = logging.Formatter('%(levelname)s - %(message)s')
 handler.setFormatter(formatter)
 log.addHandler(handler)
 
@@ -51,9 +51,9 @@ def get_current_gov_profile() -> str:
     return current_gov
 
 def get_current_epp_profile() -> str:
-    with open(PATH_EPP, 'r') as f:
-        current_epp_profile = f.read().strip()
-        f.close()
+    with open(PATH_EPP, 'r') as epp:
+        current_epp_profile = epp.read().strip()
+        epp.close()
     return current_epp_profile
 
 def set_pp(power_profile: str):
@@ -116,7 +116,7 @@ def main():
     if desired_gov != current_gov:
         set_gov_profile(desired_gov)
     else:
-        log.info(f'Governon alraedy in desired state: {desired_gov}')
+        log.info(f'Governon already in desired state: {desired_gov}')
         
     while True:
         match_epp_with_pp()
