@@ -85,8 +85,8 @@ def set_epp(epp_profile: str):
                     cpu_epp.write(epp_profile)
                     cpu_epp.close()
             except(OSError):
-                log.error('Cannot set EPP profile')
-                exit(1)
+                log.warning(f'Cannot set EPP profile to: {epp_profile}')
+                return
         log.info(f'EPP set to: {epp_profile}')
 
 def match_epp_with_pp():
