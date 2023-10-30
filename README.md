@@ -16,7 +16,7 @@ So far there are four modes of operation:
 
 There is no configuration required.
 
-Tested on Fedora 39 with 6.5.6 kernel on ASUS Zephyrus g14 2021 AMD Ryzen 9 5900HS
+Tested on Fedora 39 Silverblue with 6.5.6 kernel on ASUS Zephyrus g14 2021 AMD Ryzen 9 5900HS
 
 dependencies:
 * python3
