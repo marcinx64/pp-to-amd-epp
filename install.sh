@@ -11,6 +11,7 @@ DIR="/home/$USERNAME/.local/bin"
 if [ ! -d "$DIR" ]; then
   echo "$DIRECTORY does not exist..."
   echo "Creating $DIR"
+  mkdir -p $DIR
 fi
 
 # Copy files
