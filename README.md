@@ -1,6 +1,6 @@
 ## Power Profiles to AMD P-STATE Energy Performance Preference
 
-There is a gap in modern Desktop Linux distros from kernel 6.5+ as this kernel version is enabling AMD-PSTATE in active mode as default CPU driver on ZEN2+ machines, this is crucial especialy on notebooks when running as long as possible on battery is desirable.
+There is a gap in modern Desktop Linux distros, from kernel 6.5+ as this kernel version is enabling AMD-PSTATE in active mode as default CPU driver on ZEN2+ machines, this is crucial especialy on notebooks when running as long as possible on battery is desirable.
 
 Unfortunately Power Profiles Daemon cannot talk to AMD-PSTATE driver directly leaving it unmanaged and inconsistent with whole system energy profile.
 
@@ -16,8 +16,8 @@ So far there are four modes of operation:
 
 There is no configuration required.
 
-Tested on Fedora 39 with 6.5.6 kernel with ASUS Zephyrus g14 2021 AMD Ryzen 9 5900HS
+Tested on Fedora 39 with 6.5.6 kernel on ASUS Zephyrus g14 2021 AMD Ryzen 9 5900HS
 
 dependencies:
-python3
-power-profiles-daemon (installed by default on Fedora 35+)
+* python3
+* power-profiles-daemon (installed by default on Fedora 35+)
