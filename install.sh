@@ -6,7 +6,7 @@ if [ "$EUID" -ne 0 ]
   exit
 fi
 
-DIR="/home/$USERNAME/.local/bin"
+DIR="/usr/local/bin"
 
 if [ ! -d "$DIR" ]; then
   echo "$DIRECTORY does not exist..."
@@ -16,9 +16,12 @@ fi
 
 # Copy files
 cp $PWD/pp-to-amd-epp.service /etc/systemd/system/
-cp $PWD/pp-to-amd-epp /home/$USERNAME/.local/bin
+cp $PWD/pp-to-amd-epp /usr/local/bin
 
-# Replace user directory in systemd service file
-sed -i "s#ExecStart=/home/user/.local/bin/pp-to-amd-epp#ExecStart=/home/$USERNAME/.local/bin/pp-to-amd-epp#g" /etc/systemd/system/pp-to-amd-epp.service
+# Set permissions
+chown root:root /usr/local/bin/pp-to-amd-epp /etc/systemd/system/pp-to-amd-epp.service
+chmod 655 /usr/local/bin/pp-to-amd-epp /etc/systemd/system/pp-to-amd-epp.service
+chmod +x /usr/local/bin/pp-to-amd-epp
+
 # Enable systemd service
 systemctl enable --now pp-to-amd-epp.service
