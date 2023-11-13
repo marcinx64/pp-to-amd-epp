@@ -20,6 +20,7 @@ in {
       wantedBy = [ "multi-user.target" ];
       requires = [ "power-profiles-daemon.service" ];
       after = [ "power-profiles-daemon.service" ];
+      path = [ pkgs.power-profiles-daemon ];
       serviceConfig = {
         Type = "simple";
         Restart = "on-failure";
