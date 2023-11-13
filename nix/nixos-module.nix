@@ -1,4 +1,4 @@
-{ config, lib, pkgs, ...}:
+self: { config, lib, pkgs, ...}:
 with lib;
 let
   cfg = config.services.pp-to-amd-epp;

@@ -14,7 +14,7 @@
     withPkgsFor = fn: nixpkgs.lib.genAttrs systems (system: fn system nixpkgs.legacyPackages.${system});
   in {
     nixosModules = rec {
-      pp-to-amd-epp = import ./nix/nixos-module.nix;
+      pp-to-amd-epp = import ./nix/nixos-module.nix self;
       default = self.nixosModules.pp-to-amd-epp;
     };
 
