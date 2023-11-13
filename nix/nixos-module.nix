@@ -18,8 +18,8 @@ in {
     systemd.services.pp-to-amd-epp = {
       description = "Power Profiles Daemon to AMD-PSTATE EPP";
       wantedBy = [ "multi-user.target" ];
-      requires = [ "" ];
-      after = [ "" ];
+      requires = [ "power-profiles-daemon.service" ];
+      after = [ "power-profiles-daemon.service" ];
       serviceConfig = {
         Type = "simple";
         Restart = "on-failure";
