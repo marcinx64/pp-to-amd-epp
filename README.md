@@ -21,3 +21,38 @@ Tested on Fedora 39 Silverblue with 6.5.6 kernel on ASUS Zephyrus g14 2021 AMD R
 dependencies:
 * python3
 * power-profiles-daemon (installed by default on Fedora 35+)
+
+## NixOS Flake Setup
+
+flake.nix:
+```nix
+{
+  inputs.pp-to-amd-epp.url = github:marcinx64/pp-to-amd-epp;
+  # needed so there's no power-profiles-daemon version mismatch
+  inputs.pp-to-amd-epp.inputs.nixpkgs.follows = "nixpkgs";
+  outputs = {self, nixpkgs, ...}@inputs: {
+    # yourhostname being your actual system's hostname
+    nixosConfigurations.yourhostname = nixpkgs.lib.nixosSystem {
+      system = "x86_64-linux";
+     
+      specialArgs = { inherit inputs system; };
+      modules = [
+        ./configuration.nix
+      ];
+    };
+  };
+}
+```
+configuration.nix:
+```nix
+{
+  imports = [
+    inputs.pp-to-amd-epp.nixosModules.pp-to-amd-epp
+  ];
+
+  services.pp-to-amd-epp.enable = true;
+}
+```
+
+
+    
